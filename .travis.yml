@@ -8,7 +8,7 @@ deploy:
   provider: npm
   email: boreplusplus@gmail.com
   api_key:
-    secure: fckD60ALAdWC299QVXwyp+lQlIcE3na6CPduqq9q32Zm7HgmkFnO8EED473ei533fm0rHXwf5+/8uIQCZt7htOK8P7/oJVF0HPq/bGDrsKf541OU+8W41ncVKgQmS9i2l5H1bokS6ZNsg/x8VW6NfIQ+1MFLEoity+/3tfvNrMY=
+    secure: V2TOONAfKmSup8ngO8ur8t/Ra/Otm5H8xlw/UR6oJiJHGSvO3SbIfdtFZLpg4AnAMZHhtUh7X2OTOgfjdYMoitjlLgCk4PzAuOdxwjoOOjLapj/0hPsKJrMQ7u+SWkrkVr4WRxc6vOczZBScQ0C3t1QxXX2pGZMF+KQCHBsUGXw=
   on:
     tags: true
     repo: ShortSharpCode/npm-diaper
