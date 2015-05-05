@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+- '0.10'
+- '0.12'
+- '1.0'
+- '1.5'
+deploy:
+  provider: npm
+  email: boreplusplus@gmail.com
+  api_key:
+    secure: fckD60ALAdWC299QVXwyp+lQlIcE3na6CPduqq9q32Zm7HgmkFnO8EED473ei533fm0rHXwf5+/8uIQCZt7htOK8P7/oJVF0HPq/bGDrsKf541OU+8W41ncVKgQmS9i2l5H1bokS6ZNsg/x8VW6NfIQ+1MFLEoity+/3tfvNrMY=
+  on:
+    tags: true
+    repo: ShortSharpCode/npm-diaper
