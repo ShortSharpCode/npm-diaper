@@ -16,6 +16,8 @@ var sortByHead = R.sortBy(R.head)
 
 var dependencyPairs = R.compose(sortByHead, R.toPairs, R.prop('dependencies'));
 
+var versions = R.compose(R.keys, R.prop('versions'));
+
 var validSemvers = R.filter(semver.valid);
 
 var onConfig = R.curry(function onConfig (metadata, next, err, config) {
@@ -76,7 +78,6 @@ function grabber(registry) {
     }
 
     function getVersion (module, range,  next) {
-        var versions = R.compose(R.keys, R.prop('versions'));
         var exactMatch = R.compose(R.find(R.eq(range)), versions);
         var tagMatch = R.path(['dist-tags', range]);
         var fuzzyMatch = function fuzzyMatch (meta) {
@@ -85,7 +86,7 @@ function grabber(registry) {
 
         getMeta(module, function (err, meta) {
             if (err) return next(err);
-            var match =  exactMatch(meta) || tagMatch(meta) || fuzzyMatch(meta);
+            var match = exactMatch(meta) || tagMatch(meta) || fuzzyMatch(meta);
             if (!match) return next(versionError(module, range));
             next(null, meta.versions[match]);
         });
