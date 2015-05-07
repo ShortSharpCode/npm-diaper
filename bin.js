@@ -14,7 +14,7 @@ function usage(exitCode) {
     var logger = exitCode ? console.error.bind(console) : console.log.bind(console);
     logger('Usage: npm-diaper [path]');
     logger('');
-    logger('Prints out JSON of node modules that would be installed if npm install was run given path.');
+    logger('Prints out JSON of node modules that would be installed if npm install was run in given path.');
     logger('Uses current working directory if no path is specified.');
     process.exit(exitCode);
 }
@@ -51,7 +51,6 @@ fs.stat(param, function (err, stat) {
 
     diaper(require(packagePath), function (err, resolved) {
         if (err) onErr(err);
-
         console.log(JSON.stringify(resolved, null, 4));
     });
 });

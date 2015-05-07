@@ -9,15 +9,10 @@ var mergeFields = function mergeFields(left, right) {
 };
 
 var allDependencies = mergeFields('dependencies', 'devDependencies');
-
 var basicValue = R.pick(['name', 'version']);
-
-var sortByHead = R.sortBy(R.head)
-
+var sortByHead = R.sortBy(R.head);
 var dependencyPairs = R.compose(sortByHead, R.toPairs, R.prop('dependencies'));
-
 var versions = R.compose(R.keys, R.prop('versions'));
-
 var validSemvers = R.filter(semver.valid);
 
 var onConfig = R.curry(function onConfig (metadata, next, err, config) {
@@ -27,7 +22,6 @@ var onConfig = R.curry(function onConfig (metadata, next, err, config) {
 
     resolve(R.assoc('dependencies', allDependencies(metadata), metadata), function (err, resolved) {
         if (err) return next(err);
-
         next(null, resolved);
     });
 
@@ -38,17 +32,14 @@ var onConfig = R.curry(function onConfig (metadata, next, err, config) {
         async.map(dependencyPairs(meta), function (item, next) {
             grab.getVersion(R.head(item), R.last(item), function (err, res) {
                 if (err) return next(err);
-
                 resolve(res, next);
             });
         }, function (err, resolved) {
             if (err) return next(err);
-
             next(null, addResolved(resolved));
         });
     }
 });
-
 
 function grabber(registry) {
     var repo = {};
@@ -60,7 +51,6 @@ function grabber(registry) {
     function versionError (module, range) {
         return new Error('No matching version for: ' + module + '@' + range);
     }
-
 
     function getMeta (module, next) {
         var meta = repo[module];
