@@ -3,6 +3,8 @@ var R = require('ramda');
 var request = require('superagent');
 var semver = require('semver');
 var async = require('async');
+var tar = require('tar');
+var zlib = require('zlib');
 
 var mergeFields = function mergeFields(left, right) {
     return R.converge(R.merge, R.prop(left), R.prop(right));
@@ -67,19 +69,70 @@ function grabber(registry) {
             });
     }
 
-    function getVersion (module, range,  next) {
-        var exactMatch = R.compose(R.find(R.eq(range)), versions);
-        var tagMatch = R.path(['dist-tags', range]);
-        var fuzzyMatch = function fuzzyMatch (meta) {
-            return semver.maxSatisfying(validSemvers(versions(meta)), range);
-        };
+    function addVersion (module, version, versionMeta) {
+        var meta = repo[module] || {versions: {}};
+        meta = R.assoc(version, versionMeta || {name: module, version: version}, meta);
+    }
 
-        getMeta(module, function (err, meta) {
-            if (err) return next(err);
-            var match = exactMatch(meta) || tagMatch(meta) || fuzzyMatch(meta);
-            if (!match) return next(versionError(module, range));
-            next(null, meta.versions[match]);
-        });
+    function getMetaFromTarball(url, next) {
+        var found = false;
+        request
+            .get(url)
+            .on('error', next)
+            .pipe(zlib.Unzip())
+            .on('error', next)
+            .pipe(tar.Parse())
+            .on('entry', function (entry) {
+                if (!found && entry.type === 'File' && /^([^\/]+\/)?package.json$/.test(entry.path)) {
+                    found = true;
+                    streamToString(entry, function (err, string) {
+                        if (err) return next(err);
+                        try {
+                            next(null, JSON.parse(string));
+                        } catch (err) {
+                            next(err);
+                        }
+                    });
+                }
+            }).
+            on('end', function() {
+                if (!found) next();
+            });
+    }
+
+    function streamToString(stream, next) {
+        var string = ''
+        next = R.once(next);
+        stream.on('data', function (data) {
+            string += data.toString()
+        })
+        stream.on('end', function () {
+            next(null, string)
+        })
+        stream.on('error', next);
+    }
+
+    function getVersion (module, range,  next) {
+        if (/^https?:\/\//.test(range)) {
+            getMetaFromTarball(range, function (err, versionMeta) {
+                if (err) return next(err);
+                addVersion(module, range, versionMeta);
+                next(null, versionMeta);
+            });
+        } else {
+            var exactMatch = R.compose(R.find(R.eq(range)), versions);
+            var tagMatch = R.path(['dist-tags', range]);
+            var fuzzyMatch = function fuzzyMatch (meta) {
+                return semver.maxSatisfying(validSemvers(versions(meta)), range);
+            };
+
+            getMeta(module, function (err, meta) {
+                if (err) return next(err);
+                var match = exactMatch(meta) || tagMatch(meta) || fuzzyMatch(meta);
+                if (!match) return next(versionError(module, range));
+                next(null, meta.versions[match]);
+            });
+        }
     }
 
     return {
