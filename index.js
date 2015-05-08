@@ -22,19 +22,23 @@ var onConfig = R.curry(function onConfig (metadata, next, err, config) {
 
     var grab = grabber(config.get('registry'));
 
-    resolve(R.assoc('dependencies', allDependencies(metadata), metadata), function (err, resolved) {
+    resolve(R.assoc('dependencies', allDependencies(metadata), metadata), [], function (err, resolved) {
         if (err) return next(err);
         next(null, resolved);
     });
 
-    function resolve (meta, next) {
+    function resolve (meta, path, next) {
+        var name = R.prop('name', meta);
         var value = basicValue(meta);
         var addResolved = R.ifElse(R.isEmpty, R.always(value), R.assoc('dependencies', R.__, value));
+
+        if (R.find(R.eq(name), path)) return next(null, value);
+        path = R.append(name, path);
 
         async.map(dependencyPairs(meta), function (item, next) {
             grab.getVersion(R.head(item), R.last(item), function (err, res) {
                 if (err) return next(err);
-                resolve(res, next);
+                resolve(res, path, next);
             });
         }, function (err, resolved) {
             if (err) return next(err);
