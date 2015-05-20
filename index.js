@@ -33,12 +33,11 @@ var onConfig = R.curry(function onConfig (metadata, next, err, config) {
         var addResolved = R.ifElse(R.isEmpty, R.always(value), R.assoc('dependencies', R.__, value));
 
         if (R.find(R.eq(name), path)) return next(null, value);
-        path = R.append(name, path);
 
         async.map(dependencyPairs(meta), function (item, next) {
             grab.getVersion(R.head(item), R.last(item), function (err, res) {
                 if (err) return next(err);
-                resolve(res, path, next);
+                resolve(res, R.append(name, path), next);
             });
         }, function (err, resolved) {
             if (err) return next(err);
