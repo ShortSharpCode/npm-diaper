@@ -12,19 +12,17 @@ var basicValue = R.pick(['name', 'version']);
 var sortByHead = R.sortBy(R.head);
 var dependencyPairs = R.compose(sortByHead, R.toPairs, R.prop('dependencies'));
 
-
 function resolve (meta, path, next) {
     var name = R.prop('name', meta);
     var value = basicValue(meta);
     var addResolved = R.ifElse(R.isEmpty, R.always(value), R.assoc('dependencies', R.__, value));
 
     if (R.find(R.eq(name), path)) return next(null, value);
-    path = R.append(name, path);
 
     async.map(dependencyPairs(meta), function (item, next) {
         grabber.getVersion(R.head(item), R.last(item), function (err, res) {
             if (err) return next(err);
-            resolve(res, path, next);
+            resolve(res, R.append(name, path), next);
         });
     }, function (err, resolved) {
         if (err) return next(err);
