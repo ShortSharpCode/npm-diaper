@@ -4,6 +4,7 @@ var diaper = require('./index.js');
 var path = require('path');
 var fs = require('fs');
 var R = require('ramda');
+var grabber = require('./lib/grabber');
 
 function onErr (err) {
     console.error('ERR:', err.stack || err.message || err);
@@ -12,9 +13,13 @@ function onErr (err) {
 
 function usage(exitCode) {
     var logger = exitCode ? console.error.bind(console) : console.log.bind(console);
-    logger('Usage: npm-diaper [path]');
+    logger('Usage: npm-diaper (with no args in a package dir)');
+    logger('Usage: npm-diaper <name>');
+    logger('Usage: npm-diaper <name>@<tag>');
+    logger('Usage: npm-diaper <name>@<version>');
+    logger('Usage: npm-diaper <name>@<version range>');
     logger('');
-    logger('Prints out JSON of node modules that would be installed if npm install was run in given path.');
+    logger('Prints out JSON of node modules that would be installed if npm install was run with given args.');
     logger('Uses current working directory if no path is specified.');
     process.exit(exitCode);
 }
@@ -27,22 +32,19 @@ if (R.indexOf(process.argv[2], ['--help', '-h', '-?']) !== -1) {
     usage(0);
 }
 
-var param = path.resolve(path.join(process.cwd(), process.argv[2] || ''));
+var meta;
+if (process.argv[2]) {
+    var pair = process.argv[2].split('@');
+    grabber.getVersion(pair[0], pair[1] || 'latest', function (err, meta) {
+        if (err) onErr(err);
 
-if (!fs.existsSync(param)) {
-    console.error(param + ' does not exist');
-    process.exit(1);
-}
-
-fs.stat(param, function (err, stat) {
-    if (err) onErr(err);
-
-    if (!stat.isDirectory()) {
-        console.error(param + ' is not a directory');
-        process.exit(1);
-    }
-
-    var packagePath = path.join(param, 'package.json');
+        diaper(meta, function (err, resolved) {
+            if (err) onErr(err);
+            console.log(JSON.stringify(resolved, null, 4));
+        });
+    });
+} else {
+    var packagePath = path.join(process.cwd(), 'package.json');
 
     if (!fs.existsSync(packagePath)) {
         console.error(param + ' does not contain package.json');
@@ -53,4 +55,4 @@ fs.stat(param, function (err, stat) {
         if (err) onErr(err);
         console.log(JSON.stringify(resolved, null, 4));
     });
-});
+}
