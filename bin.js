@@ -14,14 +14,18 @@ function onErr (err) {
 
 function usage(exitCode) {
     var logger = exitCode ? console.error.bind(console) : console.log.bind(console);
-    logger('Usage: npm-diaper (with no args in a package dir)');
-    logger('Usage: npm-diaper <name>');
-    logger('Usage: npm-diaper <name>@<tag>');
-    logger('Usage: npm-diaper <name>@<version>');
-    logger('Usage: npm-diaper <name>@<version range>');
+    logger('Usage: npm-diaper [-v] (with no args in a package dir)');
+    logger('Usage: npm-diaper [-v] <name>');
+    logger('Usage: npm-diaper [-v] <name>@<tag>');
+    logger('Usage: npm-diaper [-v] <name>@<version>');
+    logger('Usage: npm-diaper [-v] <name>@<version range>');
     logger('');
     logger('Prints out JSON of node modules that would be installed if npm install was run with given args.');
     logger('Uses current working directory if no path is specified.');
+    logger('');
+    logger('Optional arguments:');
+    logger(helpOpts.join(', ') + '\tshow this message and exit');
+    logger(versionOpts.join(', ') + '\tprint out the resolved version of root module');
     process.exit(exitCode);
 }
 
