@@ -4,6 +4,7 @@ var diaper = require('./index.js');
 var path = require('path');
 var fs = require('fs');
 var R = require('ramda');
+var async = require('async');
 var grabber = require('./lib/grabber');
 
 function onErr (err) {
@@ -24,35 +25,44 @@ function usage(exitCode) {
     process.exit(exitCode);
 }
 
-if (process.argv.length > 3) {
-    usage(1);
+function metaFromPackage(args, next) {
+   var packagePath = path.join(process.cwd(), 'package.json');
+
+   if (!fs.existsSync(packagePath)) {
+       next(new Error(param + ' does not contain package.json'));
+   }
+
+   next(null, require(packagePath));
 }
 
-if (R.indexOf(process.argv[2], ['--help', '-h', '-?']) !== -1) {
-    usage(0);
+function metaFromGrabber(args, next) {
+    var pair = R.head(args).split('@');
+    grabber.getVersion(pair[0], pair[1] || 'latest', next);
 }
 
-var meta;
-if (process.argv[2]) {
-    var pair = process.argv[2].split('@');
-    grabber.getVersion(pair[0], pair[1] || 'latest', function (err, meta) {
-        if (err) onErr(err);
-
-        diaper(meta, function (err, resolved) {
-            if (err) onErr(err);
-            console.log(JSON.stringify(resolved, null, 4));
-        });
-    });
-} else {
-    var packagePath = path.join(process.cwd(), 'package.json');
-
-    if (!fs.existsSync(packagePath)) {
-        console.error(param + ' does not contain package.json');
-        process.exit(1);
-    }
-
-    diaper(require(packagePath), function (err, resolved) {
-        if (err) onErr(err);
-        console.log(JSON.stringify(resolved, null, 4));
-    });
+function getVersion(meta, next) {
+    next(null, meta.version);
 }
+
+var doesOverlap = function (left, right) {
+    return !R.isEmpty(R.intersection(left, right));
+}
+
+var args = R.drop(2, process.argv);
+var helpOpts = ['--help', '-h', '-?'];
+var versionOpts = ['--version', '-v'];
+
+if (args.length > 2) usage(1);
+if (doesOverlap(helpOpts, args)) usage(0);
+
+var version = doesOverlap(versionOpts, args);
+args = R.reject(R.flip(R.contains)(versionOpts), args);
+
+var getMeta = R.isEmpty(args) ? metaFromPackage : metaFromGrabber;
+var getResult = (version) ? getVersion : diaper;
+var getResult = async.compose(getResult, getMeta);
+
+getResult(args, function (err, result) {
+    if (err) onErr(err);
+    console.log(JSON.stringify(result, null, 4));
+});
