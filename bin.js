@@ -60,7 +60,7 @@ if (args.length > 2) usage(1);
 if (doesOverlap(helpOpts, args)) usage(0);
 
 var version = doesOverlap(versionOpts, args);
-args = R.reject(R.flip(R.contains)(versionOpts), args);
+args = R.reject(R.contains(R.__, versionOpts), args);
 
 var getMeta = R.isEmpty(args) ? metaFromPackage : metaFromGrabber;
 var getResult = (version) ? getVersion : diaper;
