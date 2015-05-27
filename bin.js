@@ -33,7 +33,7 @@ function metaFromPackage(args, next) {
    var packagePath = path.join(process.cwd(), 'package.json');
 
    if (!fs.existsSync(packagePath)) {
-       next(new Error(param + ' does not contain package.json'));
+       return next(new Error(param + ' does not contain package.json'));
    }
 
    next(null, require(packagePath));
