@@ -1,6 +1,6 @@
 {
   "name": "npm-diaper",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Prints out what will be installed (best efforts)",
   "main": "index.js",
   "author": "short.sharp.code - BorePlusPlus",
